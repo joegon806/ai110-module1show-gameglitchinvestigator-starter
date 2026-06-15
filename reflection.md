@@ -14,9 +14,10 @@ Document at least 3 bugs you found. Add rows as needed.
 
 | Input | Expected Behavior | Actual Behavior | Console Output / Error |
 |-------|-------------------|-----------------|------------------------|
-| | | | |
-| | | | |
-| | | | |
+| A guess lower than the answer | The hint says Go HIGHER! | The hint says Go LOWER! | none |
+| A guess higher than the answer | The hint says Go LOWER! | The hint says Go HIGHER! | none |
+| Click New Game | A new game starts | A new game doesn't start | none |
+| Player makes the first guess | Attempts left decreases | Attempts left doesn't decrease | none |
 
 ---
 
