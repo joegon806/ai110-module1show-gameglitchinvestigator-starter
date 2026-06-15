@@ -5,6 +5,10 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 ## 1. What was broken when you started?
 
 - What did the game look like the first time you ran it?
+  - **The hints were switched.**
+  - **The controls for pressing Enter were confusing.**
+  - **Recorded data including the Attempts remaining and the Debug data were confusing.**
+  - **Pressing New Game did not start a new game.**
 - List at least two concrete bugs you noticed at the start  
   (for example: "the hints were backwards").
 
@@ -24,6 +28,7 @@ Document at least 3 bugs you found. Add rows as needed.
 ## 2. How did you use AI as a teammate?
 
 - Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
+  - **Claude Code**
 - Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
 - Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
 
@@ -32,6 +37,8 @@ Document at least 3 bugs you found. Add rows as needed.
 ## 3. Debugging and testing your fixes
 
 - How did you decide whether a bug was really fixed?
+  - **I closely inspected the AI-coded tests to ensure they properly tested the fixed functionality.**
+  - **I opened the app manually and tested out the fixed functionality as a user.**
 - Describe at least one test you ran (manual or using pytest)  
   and what it showed you about your code.
 - Did AI help you design or understand any tests? How?
