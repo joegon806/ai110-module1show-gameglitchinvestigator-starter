@@ -34,6 +34,7 @@ def check_guess(guess, secret):
         return "Win", "🎉 Correct!"
 
     try:
+        #FIXME: Hint messages are switched
         if guess > secret:
             return "Too High", "📈 Go HIGHER!"
         else:
