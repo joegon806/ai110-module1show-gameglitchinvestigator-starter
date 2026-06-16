@@ -24,6 +24,7 @@ Document at least 3 bugs you found. Add rows as needed.
 | Click New Game | A new game starts | A new game doesn't start | none |
 | Player makes the first guess | Attempts left decreases | Attempts left doesn't decrease | none |
 | Player types a guess and presses Enter | Hint appears, data updates | Previous hint disappears but the new one doesn't appear; data doesn't update | none |
+| Player enters the wrong number for the last attempt | No hint appears because it's not needed | A hint appears | none |
 
 ---
 
