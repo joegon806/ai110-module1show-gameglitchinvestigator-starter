@@ -76,7 +76,7 @@ st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
-#FIXED: number of attempts originally mismatched
+#FIXED: AI identified that the attempts counter was not being reset properly
 if "attempts" not in st.session_state:
     st.session_state.attempts = 0
 
@@ -91,7 +91,7 @@ if "history" not in st.session_state:
 
 st.subheader("Make a guess")
 
-# FIXED: made the guess bar a form so that the Enter key can be used to submit the guess
+# FIXED: AI made the guess bar a form so that the Enter key can be used to submit the guess
 # Wrapping the input + submit in a form lets the Enter key submit the guess
 # (the field's hint becomes "Press Enter to submit form"). A form can only hold
 # st.form_submit_button, so New Game and the hint toggle stay outside it where
@@ -109,7 +109,7 @@ with col1:
 with col2:
     show_hint = st.checkbox("Show hint", value=True)
 
-#FIXED: New Game button now starts a new game when clicked, and resets game state.
+#FIXED: AI made the New Game button start a new game when clicked and reset game state.
 if new_game:
     st.session_state.attempts = 0
     st.session_state.secret = random.randint(low, high)
@@ -168,7 +168,7 @@ if submit and st.session_state.status == "playing":
                     f"Score: {st.session_state.score}"
                 )
 
-# FIXED: put state info after the guess bar so that the game state is updated before the info is displayed
+# FIXED: AI moved state info after the guess bar so that the game state is updated before the info is displayed
 # Standing game-over notice for interactions *after* the game ended (skipped on
 # the run it ended, which already showed its own win/loss message above).
 if st.session_state.status != "playing" and not ended_this_run:
