@@ -141,6 +141,7 @@ if submit and st.session_state.status == "playing":
 
         outcome, message = check_guess(guess_int, secret)
 
+        #FIXME: Hint displays on the last guess
         if show_hint:
             st.warning(message)
 
