@@ -105,15 +105,14 @@ if new_game:
 ended_this_run = False
 
 if submit and st.session_state.status == "playing":
-    #FIXME: decrease an attempt only if the guess is valid
-    st.session_state.attempts += 1
-
     ok, guess_int, err = parse_guess(raw_guess)
 
     if not ok:
         st.session_state.history.append(raw_guess)
         st.error(err)
     else:
+        #FIXED: AI moved the attempt increment here so a turn is only spent on a valid guess
+        st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
 
         # FIXED: AI Removed the even-attempt str() conversion of the secret. It forced
