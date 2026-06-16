@@ -9,7 +9,21 @@ def parse_guess(raw: str):
 
     Returns: (ok: bool, guess_int: int | None, error_message: str | None)
     """
-    raise NotImplementedError("Refactor this function from app.py into logic_utils.py")
+    if raw is None:
+        return False, None, "Enter a guess."
+
+    if raw == "":
+        return False, None, "Enter a guess."
+
+    try:
+        if "." in raw:
+            value = int(float(raw))
+        else:
+            value = int(raw)
+    except Exception:
+        return False, None, "That is not a number."
+
+    return True, value, None
 
 
 def check_guess(guess, secret):
@@ -21,18 +35,12 @@ def check_guess(guess, secret):
     if guess == secret:
         return "Win", "🎉 Correct!"
 
-    try:
-        #FIXED: switched hint messages from incorrect to correct
-        if guess > secret:
-            return "Too High", "📉 Go LOWER!"
-        else:
-            return "Too Low", "📈 Go HIGHER!"
-    except TypeError:
-        g = str(guess)
-        if g == secret:
-            return "Win", "🎉 Correct!"
-        if g > secret:
-            return "Too High", "📉 Go LOWER!"
+    # FIXED: Removed the except TypeError fallback that did lexicographic string
+    # comparison. It only existed to mask int-vs-str mismatches and produced wrong
+    # hints. Guess and secret are always ints now, so compare them numerically.
+    if guess > secret:
+        return "Too High", "📉 Go LOWER!"
+    else:
         return "Too Low", "📈 Go HIGHER!"
 
 

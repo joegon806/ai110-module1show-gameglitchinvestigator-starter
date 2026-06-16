@@ -1,7 +1,7 @@
 import random
 import streamlit as st
 
-from logic_utils import check_guess
+from logic_utils import check_guess, parse_guess
 
 def get_range_for_difficulty(difficulty: str):
     if difficulty == "Easy":
@@ -11,24 +11,6 @@ def get_range_for_difficulty(difficulty: str):
     if difficulty == "Hard":
         return 1, 50
     return 1, 100
-
-
-def parse_guess(raw: str):
-    if raw is None:
-        return False, None, "Enter a guess."
-
-    if raw == "":
-        return False, None, "Enter a guess."
-
-    try:
-        if "." in raw:
-            value = int(float(raw))
-        else:
-            value = int(raw)
-    except Exception:
-        return False, None, "That is not a number."
-
-    return True, value, None
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
@@ -133,13 +115,11 @@ if submit and st.session_state.status == "playing":
     else:
         st.session_state.history.append(guess_int)
 
-        #FIXME the answer converts to a string after every even attempt
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
-
-        outcome, message = check_guess(guess_int, secret)
+        # FIXED: AI Removed the even-attempt str() conversion of the secret. It forced
+        # an int-vs-str comparison in check_guess, which fell back to lexicographic
+        # string comparison and produced wrong hints (e.g. guessing 3 vs secret 18
+        # said "Go LOWER"). The secret stays an int so guesses compare numerically.
+        outcome, message = check_guess(guess_int, st.session_state.secret)
 
         # FIXED: AI modified this code to prevent a hint from being shown on the last attempt
         if show_hint and outcome != "Win" and st.session_state.attempts < attempt_limit:

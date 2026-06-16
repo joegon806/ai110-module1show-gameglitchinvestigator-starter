@@ -34,6 +34,7 @@ Document at least 3 bugs you found. Add rows as needed.
   - **Claude Code**
 - Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
 - Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
+  - **The AI suggested that the guess and the answer should be parsed with parse_guess in the check_guess function in logic_utils.py. I told the AI that this was not necessary because parse_guess is used in app.py to influence changes to the user interface, and adding it into check_guess would be redundant.**
 
 ---
 

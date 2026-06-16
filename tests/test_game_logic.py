@@ -15,7 +15,7 @@ from streamlit.testing.v1 import AppTest
 # Import from logic_utils (where check_guess lives) rather than through app.
 # Importing app would execute the whole Streamlit script at module-load time,
 # which leaks st.form's context in bare mode and breaks later AppTest runs.
-from logic_utils import check_guess
+from logic_utils import check_guess, parse_guess
 
 APP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.py")
 
@@ -61,17 +61,21 @@ def test_correct_guess_wins():
     assert "Correct" in message
 
 
-# The same swap existed in the TypeError fallback path, which runs when the
-# secret is a string (the app passes a stringified secret on even attempts).
+# The front end feeds raw text input through parse_guess before check_guess,
+# so these mirror that flow: parse the strings to ints first, then compare.
 def test_too_high_hint_in_string_fallback_says_go_lower():
-    outcome, message = check_guess(60, "50")
+    _, guess, _ = parse_guess("60")
+    _, secret, _ = parse_guess("50")
+    outcome, message = check_guess(guess, secret)
     assert outcome == "Too High"
     assert "LOWER" in message
     assert "HIGHER" not in message
 
 
 def test_too_low_hint_in_string_fallback_says_go_higher():
-    outcome, message = check_guess(40, "50")
+    _, guess, _ = parse_guess("40")
+    _, secret, _ = parse_guess("50")
+    outcome, message = check_guess(guess, secret)
     assert outcome == "Too Low"
     assert "HIGHER" in message
     assert "LOWER" not in message
