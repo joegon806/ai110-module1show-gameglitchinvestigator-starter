@@ -23,6 +23,7 @@ Document at least 3 bugs you found. Add rows as needed.
 | A guess higher than the answer | The hint says Go LOWER! | The hint says Go HIGHER! | none |
 | Click New Game | A new game starts | A new game doesn't start | none |
 | Player makes the first guess | Attempts left decreases | Attempts left doesn't decrease | none |
+| Player types a guess and presses Enter | Hint appears, data updates | Previous hint disappears but the new one doesn't appear; data doesn't update | none |
 
 ---
 
@@ -43,12 +44,15 @@ Document at least 3 bugs you found. Add rows as needed.
 - Describe at least one test you ran (manual or using pytest)  
   and what it showed you about your code.
 - Did AI help you design or understand any tests? How?
+  - **I asked the AI to generate pytests for every modification made to the code, including in logic and in app display.**
 
 ---
 
 ## 4. What did you learn about Streamlit and state?
 
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+  - **Streamlit reruns by executing the code from top to bottom. Streamlit reruns whenever a user interacts with the app.**
+  - **Session state refers to the data contained in a run of the app. On one run, there could be 8 Attempts remaining, but after the user makes a guess, the app reruns, and on that next run, the state contains 7 Attempts remaining.**
 
 ---
 

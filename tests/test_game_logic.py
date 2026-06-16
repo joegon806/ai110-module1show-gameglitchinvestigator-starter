@@ -12,7 +12,10 @@ import os
 
 from streamlit.testing.v1 import AppTest
 
-from app import check_guess
+# Import from logic_utils (where check_guess lives) rather than through app.
+# Importing app would execute the whole Streamlit script at module-load time,
+# which leaks st.form's context in bare mode and breaks later AppTest runs.
+from logic_utils import check_guess
 
 APP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.py")
 

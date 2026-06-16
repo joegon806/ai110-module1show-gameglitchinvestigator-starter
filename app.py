@@ -91,17 +91,22 @@ if "history" not in st.session_state:
 
 st.subheader("Make a guess")
 
-raw_guess = st.text_input(
-    "Enter your guess:",
-    key=f"guess_input_{difficulty}"
-)
+# FIXED: made the guess bar a form so that the Enter key can be used to submit the guess
+# Wrapping the input + submit in a form lets the Enter key submit the guess
+# (the field's hint becomes "Press Enter to submit form"). A form can only hold
+# st.form_submit_button, so New Game and the hint toggle stay outside it where
+# they still react on the click that toggles them.
+with st.form(key=f"guess_form_{difficulty}"):
+    raw_guess = st.text_input(
+        "Enter your guess:",
+        key=f"guess_input_{difficulty}"
+    )
+    submit = st.form_submit_button("Submit Guess 🚀")
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 with col1:
-    submit = st.button("Submit Guess 🚀")
-with col2:
     new_game = st.button("New Game 🔁")
-with col3:
+with col2:
     show_hint = st.checkbox("Show hint", value=True)
 
 #FIXED: New Game button now starts a new game when clicked, and resets game state.
@@ -163,6 +168,7 @@ if submit and st.session_state.status == "playing":
                     f"Score: {st.session_state.score}"
                 )
 
+# FIXED: put state info after the guess bar so that the game state is updated before the info is displayed
 # Standing game-over notice for interactions *after* the game ended (skipped on
 # the run it ended, which already showed its own win/loss message above).
 if st.session_state.status != "playing" and not ended_this_run:
