@@ -249,3 +249,51 @@ def test_hint_shown_when_attempts_remain():
     assert at.session_state["status"] == "playing"
     warnings = " ".join(w.value for w in at.warning)
     assert "HIGHER" in warnings
+
+
+# The hint-direction glitch lived in app.py's even-attempt branch, which turned
+# the secret into a string and made check_guess fall back to lexicographic
+# comparison. With secret 50, guesses of 6 and 100 are exactly the cases that
+# comparison gets backwards ("6" > "50" and "100" < "50" are both True), so they
+# pin the fix. Each test guesses both numbers in a different order so each value
+# lands on BOTH an odd (1st) and even (2nd) attempt across the two tests --
+# proving the bug is gone regardless of which attempt parity it lived on, and
+# without ever repeating a guess within a game.
+def test_low_then_high_guess_give_correct_hints():
+    at = _start_game_with_secret(50)
+
+    # 1st attempt (odd): 6 < 50 -> HIGHER.
+    at.text_input[0].set_value("6")
+    _submit_button(at).click().run()
+    assert at.session_state["attempts"] == 1
+    warnings = " ".join(w.value for w in at.warning)
+    assert "HIGHER" in warnings
+    assert "LOWER" not in warnings
+
+    # 2nd attempt (even): 100 > 50 -> LOWER.
+    at.text_input[0].set_value("100")
+    _submit_button(at).click().run()
+    assert at.session_state["attempts"] == 2
+    warnings = " ".join(w.value for w in at.warning)
+    assert "LOWER" in warnings
+    assert "HIGHER" not in warnings
+
+
+def test_high_then_low_guess_give_correct_hints():
+    at = _start_game_with_secret(50)
+
+    # 1st attempt (odd): 100 > 50 -> LOWER.
+    at.text_input[0].set_value("100")
+    _submit_button(at).click().run()
+    assert at.session_state["attempts"] == 1
+    warnings = " ".join(w.value for w in at.warning)
+    assert "LOWER" in warnings
+    assert "HIGHER" not in warnings
+
+    # 2nd attempt (even): 6 < 50 -> HIGHER.
+    at.text_input[0].set_value("6")
+    _submit_button(at).click().run()
+    assert at.session_state["attempts"] == 2
+    warnings = " ".join(w.value for w in at.warning)
+    assert "HIGHER" in warnings
+    assert "LOWER" not in warnings
