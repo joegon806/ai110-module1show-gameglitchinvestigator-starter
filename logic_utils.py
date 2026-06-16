@@ -22,7 +22,7 @@ def check_guess(guess, secret):
         return "Win", "🎉 Correct!"
 
     try:
-        #FIX: switched hint messages from incorrect to correct
+        #FIXED: switched hint messages from incorrect to correct
         if guess > secret:
             return "Too High", "📉 Go LOWER!"
         else:

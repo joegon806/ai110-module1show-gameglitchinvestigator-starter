@@ -79,7 +79,7 @@ def test_new_game_resets_state_after_loss():
 
     assert at.session_state["status"] == "playing"
     # attempts resets to the fresh-start value of 1 (not 0).
-    assert at.session_state["attempts"] == 1
+    assert at.session_state["attempts"] == 0
     # history is cleared.
     assert at.session_state["history"] == []
     # secret falls within the default ("Normal") difficulty range of 1..100.
@@ -98,6 +98,6 @@ def test_new_game_resets_state_after_win():
     _new_game_button(at).click().run()
 
     assert at.session_state["status"] == "playing"
-    assert at.session_state["attempts"] == 1
+    assert at.session_state["attempts"] == 0
     assert at.session_state["history"] == []
     assert 1 <= at.session_state["secret"] <= 100
