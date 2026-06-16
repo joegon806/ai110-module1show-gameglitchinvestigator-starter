@@ -149,6 +149,35 @@ def test_submit_click_updates_displays_on_same_run():
     assert "HIGHER" in warnings
 
 
+# The Enter key submits the guess because the input and the Submit button live
+# in the SAME st.form. On the real frontend, pressing Enter in a form field and
+# clicking the form's submit button fire the identical "form submitted" event,
+# so AppTest models both the same way. What makes Enter work (rather than do
+# nothing, as it did when the input was a bare text_input beside a plain button)
+# is that shared form binding — that's what this test pins down.
+def test_enter_key_submits_guess_via_form():
+    at = _start_game_with_secret(50)
+
+    guess_input = at.text_input[0]
+    submit = _submit_button(at)
+    new_game = _new_game_button(at)
+
+    # The guess field and Submit share one form, so Enter in the field submits it.
+    # New Game sits outside any form (so it can't be triggered by Enter).
+    assert submit.is_form_submitter
+    assert guess_input.form_id != ""
+    assert guess_input.form_id == submit.form_id
+    assert new_game.form_id == ""
+
+    # Submitting the form (the same event an Enter keypress produces) processes
+    # the guess on that single run.
+    guess_input.set_value("10")
+    submit.click().run()
+
+    assert at.session_state["attempts"] == 1
+    assert at.session_state["history"] == [10]
+
+
 def test_winning_click_shows_win_not_already_won_notice():
     # Guarding the handler replaced st.stop(); the winning run must show the
     # fresh "You won!" message and NOT also the standing "You already won"
