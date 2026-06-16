@@ -9,6 +9,7 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
   - **The controls for pressing Enter were confusing.**
   - **Recorded data including the Attempts remaining and the Debug data were confusing.**
   - **Pressing New Game did not start a new game.**
+  - **The Submit Guess button submits the guess, but the answer isn’t processed in the Debug Info or the attempt displays unless you change the typed text in the guess bar and either press the Enter key or click anywhere that isn’t the guess bar.**
 - List at least two concrete bugs you noticed at the start  
   (for example: "the hints were backwards").
 
