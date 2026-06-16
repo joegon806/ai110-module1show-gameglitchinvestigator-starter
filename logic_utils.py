@@ -9,10 +9,7 @@ def parse_guess(raw: str):
 
     Returns: (ok: bool, guess_int: int | None, error_message: str | None)
     """
-    if raw is None:
-        return False, None, "Enter a guess."
-
-    if raw == "":
+    if raw is None or raw == "":
         return False, None, "Enter a guess."
 
     try:
@@ -22,7 +19,8 @@ def parse_guess(raw: str):
             value = int(raw)
     except Exception:
         return False, None, "That is not a number."
-
+    
+    #FIXME: make only integer guesses acceptable
     return True, value, None
 
 

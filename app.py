@@ -105,6 +105,7 @@ if new_game:
 ended_this_run = False
 
 if submit and st.session_state.status == "playing":
+    #FIXME: decrease an attempt only if the guess is valid
     st.session_state.attempts += 1
 
     ok, guess_int, err = parse_guess(raw_guess)
