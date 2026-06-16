@@ -204,3 +204,44 @@ def test_already_won_notice_shows_on_later_interaction():
     assert "You already won" in success_text
     # Debug/attempt displays still rendered (would have been skipped by st.stop).
     assert any("Attempts left" in i.value for i in at.info)
+
+
+# The hint must NOT display on the player's last attempt. The bug: the hint
+# (the Too High/Too Low warning) rendered on every losing guess, including the
+# final one where there's no remaining guess to act on it. The fix gates the
+# warning on st.session_state.attempts < attempt_limit (checked AFTER attempts
+# is incremented), so the last guess shows the "Out of attempts!" message but
+# no hint.
+def test_hint_hidden_on_last_attempt():
+    # Normal difficulty allows 8 attempts. Pre-load 7 used attempts so this
+    # losing guess (10 vs 50 -> Too Low) is the 8th and final one.
+    at = _start_game_with_secret(50)
+    at.session_state["attempts"] = 7
+    at.run()
+
+    at.text_input[0].set_value("10")
+    _submit_button(at).click().run()
+
+    # The game ends out of attempts...
+    assert at.session_state["attempts"] == 8
+    assert at.session_state["status"] == "lost"
+    error_text = " ".join(e.value for e in at.error)
+    assert "Out of attempts!" in error_text
+    # ...and no hint warning is shown on this final guess.
+    warnings = " ".join(w.value for w in at.warning)
+    assert "HIGHER" not in warnings
+    assert "LOWER" not in warnings
+
+
+def test_hint_shown_when_attempts_remain():
+    # Control case: with attempts still left (this is the 1st of 8), a losing
+    # guess should still show its directional hint.
+    at = _start_game_with_secret(50)
+
+    at.text_input[0].set_value("10")
+    _submit_button(at).click().run()
+
+    assert at.session_state["attempts"] == 1
+    assert at.session_state["status"] == "playing"
+    warnings = " ".join(w.value for w in at.warning)
+    assert "HIGHER" in warnings

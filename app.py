@@ -141,8 +141,7 @@ if submit and st.session_state.status == "playing":
 
         outcome, message = check_guess(guess_int, secret)
 
-        # FIXED: Don't show the hint on the last attempt — there's no guess left
-        # to use it on, so it's only relevant while attempts remain.
+        # FIXED: AI modified this code to prevent a hint from being shown on the last attempt
         if show_hint and outcome != "Win" and st.session_state.attempts < attempt_limit:
             st.warning(message)
 
