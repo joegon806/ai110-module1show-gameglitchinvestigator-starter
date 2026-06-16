@@ -141,8 +141,9 @@ if submit and st.session_state.status == "playing":
 
         outcome, message = check_guess(guess_int, secret)
 
-        #FIXME: Hint displays on the last guess
-        if show_hint:
+        # FIXED: Don't show the hint on the last attempt — there's no guess left
+        # to use it on, so it's only relevant while attempts remain.
+        if show_hint and outcome != "Win" and st.session_state.attempts < attempt_limit:
             st.warning(message)
 
         st.session_state.score = update_score(
