@@ -12,16 +12,16 @@ def parse_guess(raw: str):
     if raw is None or raw == "":
         return False, None, "Enter a guess."
     
-    #FIXME: make only integer guesses acceptable
+    #FIXED: AI refactored this section to be less clunky and added a check for non-integer values.
     try:
-        if "." in raw:
-            value = int(float(raw))
-        else:
-            value = int(raw)
+        number = float(raw)
     except Exception:
         return False, None, "That is not a number."
-    
-    return True, value, None
+
+    if not number.is_integer():
+        return False, None, "Please enter a whole number."
+
+    return True, int(number), None
 
 
 def check_guess(guess, secret):
