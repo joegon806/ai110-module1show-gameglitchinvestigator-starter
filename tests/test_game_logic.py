@@ -325,6 +325,28 @@ def test_parse_guess_rejects_invalid_input(raw, expected_err):
     assert err == expected_err
 
 
+# Non-whole decimals are numbers but not valid integer guesses, so parse_guess
+# must reject them with the "enter a whole number" message rather than silently
+# truncating (the old behavior turned "3.5" into 3).
+@pytest.mark.parametrize("raw", ["3.5", "0.1", "-2.75", "99.999"])
+def test_parse_guess_rejects_non_whole_decimals(raw):
+    ok, value, err = parse_guess(raw)
+    assert ok is False
+    assert value is None
+    assert err == "Please enter a whole number."
+
+
+# A decimal whose fractional part is zero IS a whole number, so it should be
+# accepted and parsed to the equivalent int -- whether written with a trailing
+# dot, a single zero, or several trailing zeros.
+@pytest.mark.parametrize("raw, expected", [("3.", 3), ("42.0", 42), ("-7.0000", -7)])
+def test_parse_guess_accepts_whole_number_decimals(raw, expected):
+    ok, value, err = parse_guess(raw)
+    assert ok is True
+    assert value == expected
+    assert err is None
+
+
 # The attempt increment was moved so a turn is only spent on a *valid* guess.
 # Each valid-guess case asserts attempts INCREASED (0 -> 1); each invalid-guess
 # case asserts attempts stayed UNCHANGED (still 0). Secret is 50, so none of the
