@@ -31,6 +31,8 @@ def parse_guess(raw: str, low: int = None, high: int = None):
     # difficulty's [low, high] range and reminds the user what the range is.
     if low is not None and high is not None and not (low <= guess <= high):
         return False, None, f"Out of range. Guess a number between {low} and {high}."
+    
+    #FIXME: reject repeat guesses
 
     return True, guess, None
 
