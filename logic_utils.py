@@ -11,7 +11,8 @@ def parse_guess(raw: str):
     """
     if raw is None or raw == "":
         return False, None, "Enter a guess."
-
+    
+    #FIXME: make only integer guesses acceptable
     try:
         if "." in raw:
             value = int(float(raw))
@@ -20,7 +21,6 @@ def parse_guess(raw: str):
     except Exception:
         return False, None, "That is not a number."
     
-    #FIXME: make only integer guesses acceptable
     return True, value, None
 
 
