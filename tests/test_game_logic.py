@@ -416,3 +416,46 @@ def test_invalid_guess_keeps_attempts_unchanged(raw):
     assert at.session_state["attempts"] == 0
     assert at.session_state["history"] == [raw]
     assert len(at.error) > 0
+
+
+# When past_guesses is passed, parse_guess must reject a number already in it
+# and return a message naming the repeated guess.
+def test_parse_guess_rejects_repeat_guess():
+    ok, value, err = parse_guess("10", past_guesses=[5, 10, 15])
+    assert ok is False
+    assert value is None
+    assert "10" in err
+
+
+# A number not yet guessed is accepted even when other guesses exist.
+def test_parse_guess_accepts_new_guess_with_history():
+    ok, value, err = parse_guess("7", past_guesses=[5, 10, 15])
+    assert ok is True
+    assert value == 7
+    assert err is None
+
+
+# Without past_guesses, parse_guess applies no repeat check (backward compatible).
+def test_parse_guess_without_history_skips_repeat_check():
+    ok, value, err = parse_guess("10")
+    assert ok is True
+    assert value == 10
+    assert err is None
+
+
+# Through the app: repeating a previously made guess shows an error and does
+# NOT consume an attempt, same handling as other invalid input.
+def test_repeat_guess_does_not_consume_attempt():
+    at = _start_game_with_secret(50)  # Normal difficulty, range 1..100
+
+    at.text_input[0].set_value("30")
+    _submit_button(at).click().run()
+    assert at.session_state["attempts"] == 1
+    assert at.session_state["history"] == [30]
+
+    # Guess 30 again -> rejected, attempts unchanged.
+    at.text_input[0].set_value("30")
+    _submit_button(at).click().run()
+    assert at.session_state["attempts"] == 1
+    error_text = " ".join(e.value for e in at.error)
+    assert "already guessed 30" in error_text
