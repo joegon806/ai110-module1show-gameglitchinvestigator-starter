@@ -16,7 +16,7 @@ from streamlit.testing.v1 import AppTest
 # Import from logic_utils (where check_guess lives) rather than through app.
 # Importing app would execute the whole Streamlit script at module-load time,
 # which leaks st.form's context in bare mode and breaks later AppTest runs.
-from logic_utils import check_guess, parse_guess
+from logic_utils import check_guess, parse_guess, get_range_for_difficulty
 
 APP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.py")
 
@@ -441,6 +441,26 @@ def test_parse_guess_without_history_skips_repeat_check():
     assert ok is True
     assert value == 10
     assert err is None
+
+
+# get_range_for_difficulty(difficulty) returns the inclusive (low, high) range
+# for each difficulty. These pin the mapping so the ranges can't drift.
+@pytest.mark.parametrize(
+    "difficulty, expected",
+    [
+        ("Easy", (1, 20)),
+        ("Normal", (1, 100)),
+        ("Hard", (1, 50)),
+    ],
+)
+def test_get_range_for_difficulty_known_levels(difficulty, expected):
+    assert get_range_for_difficulty(difficulty) == expected
+
+
+# Any unrecognized difficulty falls back to the Normal range (1, 100).
+@pytest.mark.parametrize("difficulty", ["", "easy", "Impossible", "EASY", None])
+def test_get_range_for_difficulty_unknown_defaults_to_normal(difficulty):
+    assert get_range_for_difficulty(difficulty) == (1, 100)
 
 
 # Through the app: repeating a previously made guess shows an error and does
