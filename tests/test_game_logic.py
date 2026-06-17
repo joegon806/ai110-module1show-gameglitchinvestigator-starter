@@ -10,6 +10,7 @@ check_guess(guess, secret) returns (outcome, message).
 
 import os
 
+import pytest
 from streamlit.testing.v1 import AppTest
 
 # Import from logic_utils (where check_guess lives) rather than through app.
@@ -297,3 +298,58 @@ def test_high_then_low_guess_give_correct_hints():
     warnings = " ".join(w.value for w in at.warning)
     assert "HIGHER" in warnings
     assert "LOWER" not in warnings
+
+
+# parse_guess(raw) returns (ok, guess_int, error_message). These pin its
+# contract directly: valid numeric strings parse to an int with no error,
+# while empty and non-numeric input fail with ok=False, no value, and a message.
+@pytest.mark.parametrize(
+    "raw, expected",
+    [("42", 42), ("7", 7), ("100", 100)],
+)
+def test_parse_guess_accepts_valid_integer_strings(raw, expected):
+    ok, value, err = parse_guess(raw)
+    assert ok is True
+    assert value == expected
+    assert err is None
+
+
+@pytest.mark.parametrize(
+    "raw, expected_err",
+    [("", "Enter a guess."), ("abc", "That is not a number.")],
+)
+def test_parse_guess_rejects_invalid_input(raw, expected_err):
+    ok, value, err = parse_guess(raw)
+    assert ok is False
+    assert value is None
+    assert err == expected_err
+
+
+# The attempt increment was moved so a turn is only spent on a *valid* guess.
+# Each valid-guess case asserts attempts INCREASED (0 -> 1); each invalid-guess
+# case asserts attempts stayed UNCHANGED (still 0). Secret is 50, so none of the
+# valid guesses below win, keeping the game "playing" and the count predictable.
+@pytest.mark.parametrize("raw", ["10", "7", "100"])
+def test_valid_guess_increments_attempts(raw):
+    at = _start_game_with_secret(50)
+
+    at.text_input[0].set_value(raw)
+    _submit_button(at).click().run()
+
+    # Valid guess -> attempts increased.
+    assert at.session_state["attempts"] == 1
+    assert at.session_state["history"] == [int(raw)]
+
+
+@pytest.mark.parametrize("raw", ["", "abc"])
+def test_invalid_guess_keeps_attempts_unchanged(raw):
+    at = _start_game_with_secret(50)
+
+    at.text_input[0].set_value(raw)
+    _submit_button(at).click().run()
+
+    # Invalid guess -> attempts unchanged, but the raw value is still recorded
+    # and a parse error is shown.
+    assert at.session_state["attempts"] == 0
+    assert at.session_state["history"] == [raw]
+    assert len(at.error) > 0
