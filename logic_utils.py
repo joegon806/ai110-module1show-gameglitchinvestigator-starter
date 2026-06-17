@@ -24,7 +24,7 @@ def parse_guess(raw: str, low: int = None, high: int = None, past_guesses=None):
     try:
         number = float(raw)
     except Exception:
-        return False, None, "That is not a number."
+        return False, None, "Please enter a whole number."
 
     if not number.is_integer():
         return False, None, "Please enter a whole number."
