@@ -3,13 +3,17 @@ def get_range_for_difficulty(difficulty: str):
     raise NotImplementedError("Refactor this function from app.py into logic_utils.py")
 
 
-def parse_guess(raw: str, low: int = None, high: int = None):
+def parse_guess(raw: str, low: int = None, high: int = None, past_guesses=None):
     """
     Parse user input into an int guess.
 
     When low and high are both provided, the guess must fall within the
     inclusive [low, high] range; otherwise it is rejected with a reminder of
     the valid range. When they are omitted, no range check is applied.
+
+    When past_guesses is provided, a guess already present in it is rejected so
+    the player can't waste a turn repeating a number. When omitted, no repeat
+    check is applied.
 
     Returns: (ok: bool, guess_int: int | None, error_message: str | None)
     """
@@ -32,7 +36,10 @@ def parse_guess(raw: str, low: int = None, high: int = None):
     if low is not None and high is not None and not (low <= guess <= high):
         return False, None, f"Out of range. Guess a number between {low} and {high}."
     
-    #FIXME: reject repeat guesses
+    #FIXED: AI added a repeat-guess check that rejects a number the player has
+    # already guessed this game, so a duplicate doesn't waste a turn.
+    if past_guesses is not None and guess in past_guesses:
+        return False, None, f"You already guessed {guess}. Try a different number."
 
     return True, guess, None
 
