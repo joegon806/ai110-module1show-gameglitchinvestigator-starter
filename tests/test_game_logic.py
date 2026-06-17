@@ -363,6 +363,47 @@ def test_valid_guess_increments_attempts(raw):
     assert at.session_state["history"] == [int(raw)]
 
 
+# When low/high are passed, parse_guess must reject guesses outside the
+# inclusive range and return a message naming the range. Both boundaries
+# (low and high) are valid; one past each end is not.
+@pytest.mark.parametrize("raw", ["0", "21", "100", "-5"])
+def test_parse_guess_rejects_out_of_range(raw):
+    ok, value, err = parse_guess(raw, 1, 20)
+    assert ok is False
+    assert value is None
+    assert "between 1 and 20" in err
+
+
+@pytest.mark.parametrize("raw, expected", [("1", 1), ("20", 20), ("10", 10)])
+def test_parse_guess_accepts_in_range_including_boundaries(raw, expected):
+    ok, value, err = parse_guess(raw, 1, 20)
+    assert ok is True
+    assert value == expected
+    assert err is None
+
+
+# Without a range, parse_guess applies no bounds check (backward compatible).
+def test_parse_guess_without_range_skips_bounds_check():
+    ok, value, err = parse_guess("9999")
+    assert ok is True
+    assert value == 9999
+    assert err is None
+
+
+# Through the app: an out-of-range guess shows an error, records the raw value,
+# and does NOT consume an attempt (same handling as other invalid input).
+def test_out_of_range_guess_does_not_consume_attempt():
+    at = _start_game_with_secret(50)  # Normal difficulty, range 1..100
+
+    at.text_input[0].set_value("500")
+    _submit_button(at).click().run()
+
+    assert at.session_state["attempts"] == 0
+    assert at.session_state["history"] == ["500"]
+    error_text = " ".join(e.value for e in at.error)
+    assert "between 1 and 100" in error_text
+
+
 @pytest.mark.parametrize("raw", ["", "abc"])
 def test_invalid_guess_keeps_attempts_unchanged(raw):
     at = _start_game_with_secret(50)

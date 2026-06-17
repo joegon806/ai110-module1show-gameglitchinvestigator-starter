@@ -3,15 +3,19 @@ def get_range_for_difficulty(difficulty: str):
     raise NotImplementedError("Refactor this function from app.py into logic_utils.py")
 
 
-def parse_guess(raw: str):
+def parse_guess(raw: str, low: int = None, high: int = None):
     """
     Parse user input into an int guess.
+
+    When low and high are both provided, the guess must fall within the
+    inclusive [low, high] range; otherwise it is rejected with a reminder of
+    the valid range. When they are omitted, no range check is applied.
 
     Returns: (ok: bool, guess_int: int | None, error_message: str | None)
     """
     if raw is None or raw == "":
         return False, None, "Enter a guess."
-    
+
     #FIXED: AI refactored this section to be less clunky and added a check for non-integer values.
     try:
         number = float(raw)
@@ -20,10 +24,15 @@ def parse_guess(raw: str):
 
     if not number.is_integer():
         return False, None, "Please enter a whole number."
-    
-    #FIXME: reject guesses that are out of range 
 
-    return True, int(number), None
+    guess = int(number)
+
+    #FIXED: AI added an out-of-range check that rejects guesses outside the
+    # difficulty's [low, high] range and reminds the user what the range is.
+    if low is not None and high is not None and not (low <= guess <= high):
+        return False, None, f"Out of range. Guess a number between {low} and {high}."
+
+    return True, guess, None
 
 
 def check_guess(guess, secret):

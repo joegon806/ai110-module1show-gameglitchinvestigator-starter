@@ -105,7 +105,7 @@ if new_game:
 ended_this_run = False
 
 if submit and st.session_state.status == "playing":
-    ok, guess_int, err = parse_guess(raw_guess)
+    ok, guess_int, err = parse_guess(raw_guess, low, high)
 
     if not ok:
         st.session_state.history.append(raw_guess)
