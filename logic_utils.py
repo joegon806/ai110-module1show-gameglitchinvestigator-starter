@@ -20,6 +20,8 @@ def parse_guess(raw: str):
 
     if not number.is_integer():
         return False, None, "Please enter a whole number."
+    
+    #FIXME: reject guesses that are out of range 
 
     return True, int(number), None
 
