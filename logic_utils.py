@@ -1,15 +1,22 @@
 def get_range_for_difficulty(difficulty: str):
     """Return (low, high) inclusive range for a given difficulty."""
-    raise NotImplementedError("Refactor this function from app.py into logic_utils.py")
+    if difficulty == "Easy":
+        return 1, 20
+    if difficulty == "Normal":
+        return 1, 100
+    if difficulty == "Hard":
+        return 1, 50
+    return 1, 100
 
 
-def parse_guess(raw: str, low: int = None, high: int = None, past_guesses=None):
+def parse_guess(raw: str, difficulty: str = None, past_guesses=None):
     """
     Parse user input into an int guess.
 
-    When low and high are both provided, the guess must fall within the
-    inclusive [low, high] range; otherwise it is rejected with a reminder of
-    the valid range. When they are omitted, no range check is applied.
+    When difficulty is provided, its inclusive [low, high] range is derived via
+    get_range_for_difficulty and the guess must fall within it; otherwise it is
+    rejected with a reminder of the valid range. When difficulty is omitted, no
+    range check is applied.
 
     When past_guesses is provided, a guess already present in it is rejected so
     the player can't waste a turn repeating a number. When omitted, no repeat
@@ -33,8 +40,10 @@ def parse_guess(raw: str, low: int = None, high: int = None, past_guesses=None):
 
     #FIXED: AI added an out-of-range check that rejects guesses outside the
     # difficulty's [low, high] range and reminds the user what the range is.
-    if low is not None and high is not None and not (low <= guess <= high):
-        return False, None, f"Out of range. Guess a number between {low} and {high}."
+    if difficulty is not None:
+        low, high = get_range_for_difficulty(difficulty)
+        if not (low <= guess <= high):
+            return False, None, f"Out of range. Guess a number between {low} and {high}."
     
     #FIXED: AI added a repeat-guess check that rejects a number the player has
     # already guessed this game, so a duplicate doesn't waste a turn.

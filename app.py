@@ -1,16 +1,7 @@
 import random
 import streamlit as st
 
-from logic_utils import check_guess, parse_guess
-
-def get_range_for_difficulty(difficulty: str):
-    if difficulty == "Easy":
-        return 1, 20
-    if difficulty == "Normal":
-        return 1, 100
-    if difficulty == "Hard":
-        return 1, 50
-    return 1, 100
+from logic_utils import check_guess, parse_guess, get_range_for_difficulty
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
@@ -105,7 +96,7 @@ if new_game:
 ended_this_run = False
 
 if submit and st.session_state.status == "playing":
-    ok, guess_int, err = parse_guess(raw_guess, low, high, st.session_state.history)
+    ok, guess_int, err = parse_guess(raw_guess, difficulty, st.session_state.history)
 
     if not ok:
         st.session_state.history.append(raw_guess)

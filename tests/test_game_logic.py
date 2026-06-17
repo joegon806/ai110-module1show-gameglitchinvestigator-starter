@@ -316,7 +316,7 @@ def test_parse_guess_accepts_valid_integer_strings(raw, expected):
 
 @pytest.mark.parametrize(
     "raw, expected_err",
-    [("", "Enter a guess."), ("abc", "That is not a number.")],
+    [("", "Enter a guess."), ("abc", "Please enter a whole number.")],
 )
 def test_parse_guess_rejects_invalid_input(raw, expected_err):
     ok, value, err = parse_guess(raw)
@@ -363,12 +363,12 @@ def test_valid_guess_increments_attempts(raw):
     assert at.session_state["history"] == [int(raw)]
 
 
-# When low/high are passed, parse_guess must reject guesses outside the
+# When a difficulty is passed, parse_guess must reject guesses outside its
 # inclusive range and return a message naming the range. Both boundaries
-# (low and high) are valid; one past each end is not.
+# (low and high) are valid; one past each end is not. "Easy" is range 1..20.
 @pytest.mark.parametrize("raw", ["0", "21", "100", "-5"])
 def test_parse_guess_rejects_out_of_range(raw):
-    ok, value, err = parse_guess(raw, 1, 20)
+    ok, value, err = parse_guess(raw, "Easy")
     assert ok is False
     assert value is None
     assert "between 1 and 20" in err
@@ -376,7 +376,7 @@ def test_parse_guess_rejects_out_of_range(raw):
 
 @pytest.mark.parametrize("raw, expected", [("1", 1), ("20", 20), ("10", 10)])
 def test_parse_guess_accepts_in_range_including_boundaries(raw, expected):
-    ok, value, err = parse_guess(raw, 1, 20)
+    ok, value, err = parse_guess(raw, "Easy")
     assert ok is True
     assert value == expected
     assert err is None
