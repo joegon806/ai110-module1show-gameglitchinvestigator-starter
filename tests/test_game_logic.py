@@ -16,7 +16,7 @@ from streamlit.testing.v1 import AppTest
 # Import from logic_utils (where check_guess lives) rather than through app.
 # Importing app would execute the whole Streamlit script at module-load time,
 # which leaks st.form's context in bare mode and breaks later AppTest runs.
-from logic_utils import check_guess, parse_guess, get_range_for_difficulty
+from logic_utils import check_guess, parse_guess, get_range_for_difficulty, update_score
 
 APP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.py")
 
@@ -479,3 +479,51 @@ def test_repeat_guess_does_not_consume_attempt():
     assert at.session_state["attempts"] == 1
     error_text = " ".join(e.value for e in at.error)
     assert "already guessed 30" in error_text
+
+
+# update_score(current_score, outcome, attempt_number) returns the new score.
+# A "Win" awards points = 100 - 10*(attempt_number + 1), floored at a minimum
+# of 10, so faster wins are worth more. These pin the formula and the floor.
+@pytest.mark.parametrize(
+    "attempt_number, expected_points",
+    [
+        (1, 80),   # 100 - 10*2
+        (2, 70),   # 100 - 10*3
+        (8, 10),   # 100 - 10*9 = 10 (exactly the floor)
+        (9, 10),   # 100 - 10*10 = 0 -> floored to 10
+        (20, 10),  # deep into negative territory -> still floored to 10
+    ],
+)
+def test_win_awards_points_with_floor(attempt_number, expected_points):
+    assert update_score(0, "Win", attempt_number) == expected_points
+
+
+def test_win_points_add_to_current_score():
+    # Points are added to the existing score, not replacing it.
+    assert update_score(50, "Win", 1) == 130  # 50 + 80
+
+
+# "Too High" is parity-dependent: an even attempt_number gains 5, an odd one
+# loses 5. This quirk is intentional game behavior, so it's pinned both ways.
+@pytest.mark.parametrize(
+    "attempt_number, expected",
+    [(2, 15), (4, 15), (1, 5), (3, 5)],
+)
+def test_too_high_score_depends_on_attempt_parity(attempt_number, expected):
+    assert update_score(10, "Too High", attempt_number) == expected
+
+
+# "Too Low" always loses 5, regardless of attempt parity.
+@pytest.mark.parametrize("attempt_number", [1, 2, 3, 4])
+def test_too_low_always_loses_five(attempt_number):
+    assert update_score(10, "Too Low", attempt_number) == 5
+
+
+def test_too_low_score_can_go_negative():
+    assert update_score(0, "Too Low", 1) == -5
+
+
+# An unrecognized outcome leaves the score unchanged.
+@pytest.mark.parametrize("outcome", ["", "Lose", "unknown", None])
+def test_unknown_outcome_leaves_score_unchanged(outcome):
+    assert update_score(42, outcome, 1) == 42
