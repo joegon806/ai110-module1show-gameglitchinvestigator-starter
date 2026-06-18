@@ -252,6 +252,23 @@ def test_hint_shown_when_attempts_remain():
     assert "HIGHER" in warnings
 
 
+# The hint warning leads with the player's guess: it's prefixed with
+# "Guess: {guess}" before the directional message, so the player can see which
+# guess the hint refers to. Secret is 50; guessing 10 is "Too Low" -> HIGHER,
+# and the warning must start with "Guess: 10".
+def test_hint_warning_is_prefixed_with_the_guess():
+    at = _start_game_with_secret(50)
+
+    at.text_input[0].set_value("10")
+    _submit_button(at).click().run()
+
+    warnings = [w.value for w in at.warning]
+    assert len(warnings) == 1
+    assert warnings[0].startswith("Guess: 10")
+    # The directional hint is still present after the prefix.
+    assert "HIGHER" in warnings[0]
+
+
 # The hint-direction glitch lived in app.py's even-attempt branch, which turned
 # the secret into a string and made check_guess fall back to lexicographic
 # comparison. With secret 50, guesses of 6 and 100 are exactly the cases that

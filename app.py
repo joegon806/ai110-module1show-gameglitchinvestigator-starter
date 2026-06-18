@@ -2,7 +2,7 @@ import random
 import streamlit as st
 
 from logic_utils import check_guess, parse_guess, get_range_for_difficulty, update_score
-
+ 
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
 st.title("🎮 Game Glitch Investigator")
@@ -96,7 +96,7 @@ if submit and st.session_state.status == "playing":
 
         # FIXED: AI modified this code to prevent a hint from being shown on the last attempt
         if show_hint and outcome != "Win" and st.session_state.attempts < attempt_limit:
-            st.warning(message)
+            st.warning(f"Guess: {guess_int} — {message}")
 
         st.session_state.score = update_score(
             current_score=st.session_state.score,
