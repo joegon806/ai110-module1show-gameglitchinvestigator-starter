@@ -498,10 +498,11 @@ def test_repeat_guess_does_not_consume_attempt():
     assert "already guessed 30" in error_text
 
 
-# game_points(current_score, status, attempt_limit, attempts_taken) returns
-# the new score. The score only settles when the game ends: a win adds
-# (attempt_limit + 1 - attempts_taken) * 10, so winning in fewer attempts is
-# worth more; a loss subtracts 5. These pin the win formula.
+# game_points(status, attempt_limit, attempts_taken) returns the point delta to
+# apply when the game ends (the app adds it to the running score). The score only
+# settles when the game ends: a win awards (attempt_limit + 1 - attempts_taken) *
+# 10, so winning in fewer attempts is worth more; a loss is -5. These pin the win
+# formula.
 @pytest.mark.parametrize(
     "attempt_limit, attempts_taken, expected_points",
     [
@@ -513,29 +514,30 @@ def test_repeat_guess_does_not_consume_attempt():
     ],
 )
 def test_win_awards_points_by_attempts_remaining(attempt_limit, attempts_taken, expected_points):
-    assert game_points(0, "won", attempt_limit, attempts_taken) == expected_points
+    assert game_points("won", attempt_limit, attempts_taken) == expected_points
 
 
-def test_win_points_add_to_current_score():
-    # Points are added to the existing score, not replacing it.
-    assert game_points(50, "won", 8, 1) == 130  # 50 + 80
+def test_win_returns_the_point_delta_not_a_total():
+    # game_points returns only the points to add; the running score is applied by
+    # the caller (app.py does st.session_state.score += points).
+    assert game_points("won", 8, 1) == 80
 
 
-# A loss always subtracts 5, regardless of attempt counts.
+# A loss always returns -5, regardless of attempt counts.
 @pytest.mark.parametrize("attempt_limit, attempts_taken", [(8, 8), (5, 5), (6, 6)])
 def test_loss_subtracts_five(attempt_limit, attempts_taken):
-    assert game_points(10, "lost", attempt_limit, attempts_taken) == 5
+    assert game_points("lost", attempt_limit, attempts_taken) == -5
 
 
-def test_loss_score_can_go_negative():
-    assert game_points(0, "lost", 8, 8) == -5
+def test_loss_delta_is_negative():
+    assert game_points("lost", 8, 8) == -5
 
 
-# While the game is still in progress (or for any non-ending status), the score
-# is left unchanged — individual guesses no longer move it.
+# For any non-ending status the delta is 0 — individual guesses no longer move
+# the score.
 @pytest.mark.parametrize("status", ["playing", "", "Too High", "Too Low", None])
-def test_non_ending_status_leaves_score_unchanged(status):
-    assert game_points(42, status, 8, 3) == 42
+def test_non_ending_status_yields_zero_delta(status):
+    assert game_points(status, 8, 3) == 0
 
 
 # --------------------------------------------------------------------------
