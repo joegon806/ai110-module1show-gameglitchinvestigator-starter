@@ -200,15 +200,17 @@ def test_winning_click_shows_win_not_already_won_notice():
 
 def test_already_won_notice_shows_on_later_interaction():
     # On a subsequent run after the game ended, the standing notice appears and
-    # the displays still render (st.stop() no longer short-circuits them).
+    # the run is no longer short-circuited (st.stop() is gone, so the success
+    # notice below the handler renders).
     at = _start_game_with_secret(50)
     at.session_state["status"] = "won"
     at.run()
 
     success_text = " ".join(s.value for s in at.success)
     assert "You already won" in success_text
-    # Debug/attempt displays still rendered (would have been skipped by st.stop).
-    assert any("Attempts left" in i.value for i in at.info)
+    # The "Attempts left" banner is gated on status == "playing", so once the
+    # game has ended it no longer renders.
+    assert not any("Attempts left" in i.value for i in at.info)
 
 
 # The hint must NOT display on the player's last attempt. The bug: the hint
@@ -651,3 +653,84 @@ def test_new_game_before_end_leaves_score_unchanged():
     assert at.session_state["status"] == "playing"
     assert at.session_state["attempts"] == 0
     assert at.session_state["score"] == 70
+
+
+# --------------------------------------------------------------------------
+# The "Guess a number ... Attempts left: N" info banner is gated on
+# status == "playing", so it shows only during an active game and disappears
+# the moment the game ends (won or lost). It's the only st.info on the page, so
+# its presence is read straight off at.info.
+# --------------------------------------------------------------------------
+
+def _banner_text(at):
+    """Joined text of every info element rendered on the last run."""
+    return " ".join(i.value for i in at.info)
+
+
+def test_banner_shows_during_active_game():
+    # A freshly started game is "playing", so the banner is present.
+    at = _start_game_with_secret(50)
+
+    assert at.session_state["status"] == "playing"
+    assert "Guess a number" in _banner_text(at)
+    assert "Attempts left:" in _banner_text(at)
+
+
+def test_banner_hidden_after_win():
+    # On the winning click the game ends -> the banner must not render.
+    at = _start_game_with_secret(50)
+
+    at.text_input[0].set_value("50")
+    _submit_button(at).click().run()
+
+    assert at.session_state["status"] == "won"
+    assert "Attempts left:" not in _banner_text(at)
+
+
+def test_banner_hidden_after_loss():
+    # Normal allows 8 attempts; pre-load 7 so this wrong guess ends the game.
+    at = _start_game_with_secret(50)
+    at.session_state["attempts"] = 7
+    at.run()
+
+    at.text_input[0].set_value("10")
+    _submit_button(at).click().run()
+
+    assert at.session_state["status"] == "lost"
+    assert "Attempts left:" not in _banner_text(at)
+
+
+@pytest.mark.parametrize("status", ["won", "lost"])
+def test_banner_hidden_on_later_interaction_after_end(status):
+    # On a run after the game ended (any ending status), the banner stays hidden.
+    at = _start_game_with_secret(50)
+    at.session_state["status"] = status
+    at.run()
+
+    assert "Attempts left:" not in _banner_text(at)
+
+
+def test_banner_reappears_after_new_game():
+    # End the game (banner hidden), then New Game returns to "playing" and the
+    # banner comes back.
+    at = _start_game_with_secret(50)
+    at.text_input[0].set_value("50")
+    _submit_button(at).click().run()
+    assert at.session_state["status"] == "won"
+    assert "Attempts left:" not in _banner_text(at)
+
+    _new_game_button(at).click().run()
+    assert at.session_state["status"] == "playing"
+    assert "Attempts left:" in _banner_text(at)
+
+
+def test_banner_still_shows_after_wrong_guess_mid_game():
+    # A wrong but in-range guess keeps the game "playing", so the banner stays
+    # and reflects the decremented attempts-left count (8 allowed - 1 used = 7).
+    at = _start_game_with_secret(50)
+
+    at.text_input[0].set_value("10")
+    _submit_button(at).click().run()
+
+    assert at.session_state["status"] == "playing"
+    assert "Attempts left: 7" in _banner_text(at)
