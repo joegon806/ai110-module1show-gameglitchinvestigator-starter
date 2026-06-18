@@ -98,15 +98,18 @@ if submit and st.session_state.status == "playing":
         if show_hint and outcome != "Win" and st.session_state.attempts < attempt_limit:
             st.warning(f"Guess: {guess_int} — {message}")
 
-        st.session_state.score = update_score(
-            current_score=st.session_state.score,
-            outcome=outcome,
-            attempt_number=st.session_state.attempts,
-        )
-
+        # FIXED: AI redesigned scoring so the score only settles when the game
+        # ends — a win adds (attempt_limit + 1 - attempts_taken) * 10 and a loss
+        # subtracts 5. Individual guesses no longer move the score.
         if outcome == "Win":
-            st.balloons()
             st.session_state.status = "won"
+            st.session_state.score = update_score(
+                current_score=st.session_state.score,
+                status=st.session_state.status,
+                attempt_limit=attempt_limit,
+                attempts_taken=st.session_state.attempts,
+            )
+            st.balloons()
             ended_this_run = True
             st.success(
                 f"You won! The secret was {st.session_state.secret}. "
@@ -115,6 +118,12 @@ if submit and st.session_state.status == "playing":
         else:
             if st.session_state.attempts >= attempt_limit:
                 st.session_state.status = "lost"
+                st.session_state.score = update_score(
+                    current_score=st.session_state.score,
+                    status=st.session_state.status,
+                    attempt_limit=attempt_limit,
+                    attempts_taken=st.session_state.attempts,
+                )
                 ended_this_run = True
                 st.error(
                     f"Out of attempts! "

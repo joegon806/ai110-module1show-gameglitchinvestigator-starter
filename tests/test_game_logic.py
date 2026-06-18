@@ -498,49 +498,41 @@ def test_repeat_guess_does_not_consume_attempt():
     assert "already guessed 30" in error_text
 
 
-# update_score(current_score, outcome, attempt_number) returns the new score.
-# A "Win" awards points = 100 - 10*(attempt_number + 1), floored at a minimum
-# of 10, so faster wins are worth more. These pin the formula and the floor.
+# update_score(current_score, status, attempt_limit, attempts_taken) returns
+# the new score. The score only settles when the game ends: a win adds
+# (attempt_limit + 1 - attempts_taken) * 10, so winning in fewer attempts is
+# worth more; a loss subtracts 5. These pin the win formula.
 @pytest.mark.parametrize(
-    "attempt_number, expected_points",
+    "attempt_limit, attempts_taken, expected_points",
     [
-        (1, 80),   # 100 - 10*2
-        (2, 70),   # 100 - 10*3
-        (8, 10),   # 100 - 10*9 = 10 (exactly the floor)
-        (9, 10),   # 100 - 10*10 = 0 -> floored to 10
-        (20, 10),  # deep into negative territory -> still floored to 10
+        (8, 1, 80),   # (8 + 1 - 1) * 10
+        (8, 2, 70),   # (8 + 1 - 2) * 10
+        (8, 8, 10),   # (8 + 1 - 8) * 10 -> won on the last allowed attempt
+        (5, 1, 50),   # Hard difficulty, fastest win
+        (6, 6, 10),   # Easy difficulty, won on the last allowed attempt
     ],
 )
-def test_win_awards_points_with_floor(attempt_number, expected_points):
-    assert update_score(0, "Win", attempt_number) == expected_points
+def test_win_awards_points_by_attempts_remaining(attempt_limit, attempts_taken, expected_points):
+    assert update_score(0, "won", attempt_limit, attempts_taken) == expected_points
 
 
 def test_win_points_add_to_current_score():
     # Points are added to the existing score, not replacing it.
-    assert update_score(50, "Win", 1) == 130  # 50 + 80
+    assert update_score(50, "won", 8, 1) == 130  # 50 + 80
 
 
-# "Too High" is parity-dependent: an even attempt_number gains 5, an odd one
-# loses 5. This quirk is intentional game behavior, so it's pinned both ways.
-@pytest.mark.parametrize(
-    "attempt_number, expected",
-    [(2, 15), (4, 15), (1, 5), (3, 5)],
-)
-def test_too_high_score_depends_on_attempt_parity(attempt_number, expected):
-    assert update_score(10, "Too High", attempt_number) == expected
+# A loss always subtracts 5, regardless of attempt counts.
+@pytest.mark.parametrize("attempt_limit, attempts_taken", [(8, 8), (5, 5), (6, 6)])
+def test_loss_subtracts_five(attempt_limit, attempts_taken):
+    assert update_score(10, "lost", attempt_limit, attempts_taken) == 5
 
 
-# "Too Low" always loses 5, regardless of attempt parity.
-@pytest.mark.parametrize("attempt_number", [1, 2, 3, 4])
-def test_too_low_always_loses_five(attempt_number):
-    assert update_score(10, "Too Low", attempt_number) == 5
+def test_loss_score_can_go_negative():
+    assert update_score(0, "lost", 8, 8) == -5
 
 
-def test_too_low_score_can_go_negative():
-    assert update_score(0, "Too Low", 1) == -5
-
-
-# An unrecognized outcome leaves the score unchanged.
-@pytest.mark.parametrize("outcome", ["", "Lose", "unknown", None])
-def test_unknown_outcome_leaves_score_unchanged(outcome):
-    assert update_score(42, outcome, 1) == 42
+# While the game is still in progress (or for any non-ending status), the score
+# is left unchanged — individual guesses no longer move it.
+@pytest.mark.parametrize("status", ["playing", "", "Too High", "Too Low", None])
+def test_non_ending_status_leaves_score_unchanged(status):
+    assert update_score(42, status, 8, 3) == 42

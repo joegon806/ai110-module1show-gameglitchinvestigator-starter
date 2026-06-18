@@ -70,21 +70,24 @@ def check_guess(guess, secret):
     else:
         return "Too Low", "📈 Go HIGHER!"
 
-#FIXME: redesign how the score is calculated and added
-def update_score(current_score: int, outcome: str, attempt_number: int):
-    """Update score based on outcome and attempt number."""
-    if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
-        if points < 10:
-            points = 10
-        return current_score + points
+def update_score(current_score: int, status: str, attempt_limit: int, attempts_taken: int):
+    #FIXED: AI implemented new scoring logic based on game outcome
+    """
+    Update score only when the game ends.
 
-    if outcome == "Too High":
-        if attempt_number % 2 == 0:
-            return current_score + 5
-        return current_score - 5
+    The score is untouched during play; individual guesses (too high / too low)
+    no longer affect it. It settles once on the game-ending event:
 
-    if outcome == "Too Low":
+      - "won":  add (attempt_limit + 1 - attempts_taken) * 10, so winning in
+                fewer attempts is worth more.
+      - "lost": subtract 5.
+
+    Any other status ("playing", etc.) leaves the score unchanged.
+    """
+    if status == "won":
+        return current_score + (attempt_limit + 1 - attempts_taken) * 10
+
+    if status == "lost":
         return current_score - 5
 
     return current_score
