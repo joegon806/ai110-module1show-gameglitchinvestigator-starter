@@ -536,3 +536,116 @@ def test_loss_score_can_go_negative():
 @pytest.mark.parametrize("status", ["playing", "", "Too High", "Too Low", None])
 def test_non_ending_status_leaves_score_unchanged(status):
     assert update_score(42, status, 8, 3) == 42
+
+
+# --------------------------------------------------------------------------
+# End-to-end scoring through the app (AppTest). These drive the real Streamlit
+# script so they cover update_score AND the app's call-site wiring: the score
+# only moves on the game-ending click, and not before.
+# --------------------------------------------------------------------------
+
+# Per-difficulty attempt limits, mirrored from app.py's attempt_limit_map.
+_DIFFICULTY_LIMITS = (("Easy", 6), ("Normal", 8), ("Hard", 5))
+
+
+def _start_game(secret: int, difficulty: str = "Normal", attempts: int = 0):
+    """Run the app with a pinned difficulty, secret, and attempt count.
+
+    Secret 10 / guesses 10-11 stay inside every difficulty's range, so callers
+    can reuse this across all three levels without an out-of-range rejection.
+    """
+    at = AppTest.from_file(APP_PATH)
+    at.run()
+    if difficulty != "Normal":
+        # Selecting a difficulty changes attempt_limit and the form/input keys.
+        at.selectbox[0].set_value(difficulty).run()
+    at.session_state["secret"] = secret
+    at.session_state["attempts"] = attempts
+    at.run()
+    return at
+
+
+# Winning on attempt n (out of `limit`) scores (limit + 1 - n) * 10. Sweeping n
+# from 1 to the limit for every difficulty covers every possible "attempts left"
+# value at the moment of the winning guess — from a first-try win down to a win
+# on the very last allowed attempt (worth exactly 10).
+_WIN_SCORE_CASES = [
+    (difficulty, limit, win_on, (limit + 1 - win_on) * 10)
+    for difficulty, limit in _DIFFICULTY_LIMITS
+    for win_on in range(1, limit + 1)
+]
+
+
+@pytest.mark.parametrize("difficulty, limit, win_on, expected_score", _WIN_SCORE_CASES)
+def test_winning_scores_by_attempts_left(difficulty, limit, win_on, expected_score):
+    # Pre-load the attempts so the upcoming correct guess is the `win_on`-th one.
+    at = _start_game(secret=10, difficulty=difficulty, attempts=win_on - 1)
+
+    at.text_input[0].set_value("10")
+    _submit_button(at).click().run()
+
+    assert at.session_state["status"] == "won"
+    assert at.session_state["attempts"] == win_on
+    assert at.session_state["score"] == expected_score
+
+
+# Losing happens only when the final allowed attempt is used up without winning.
+# For every difficulty, the losing guess drives status -> "lost" and the score
+# down by exactly 5 (starting from 0 here, so it lands at -5).
+@pytest.mark.parametrize("difficulty, limit", _DIFFICULTY_LIMITS)
+def test_losing_subtracts_five_each_difficulty(difficulty, limit):
+    # Pre-load limit-1 attempts so this wrong guess is the final, losing one.
+    at = _start_game(secret=10, difficulty=difficulty, attempts=limit - 1)
+
+    at.text_input[0].set_value("11")  # wrong, but in range for every difficulty
+    _submit_button(at).click().run()
+
+    assert at.session_state["status"] == "lost"
+    assert at.session_state["attempts"] == limit
+    assert at.session_state["score"] == -5
+
+
+def test_losing_subtracts_five_from_existing_score():
+    # The -5 penalty applies to whatever score was carried in, not just 0.
+    at = _start_game(secret=10, difficulty="Normal", attempts=7)
+    at.session_state["score"] = 50
+    at.run()
+
+    at.text_input[0].set_value("11")  # 8th attempt -> out of attempts -> lost
+    _submit_button(at).click().run()
+
+    assert at.session_state["status"] == "lost"
+    assert at.session_state["score"] == 45
+
+
+# Wrong (but valid) guesses must not touch the score while the game is ongoing —
+# scoring only settles at the end. Three losing guesses in a row keep it at 0.
+def test_wrong_guesses_do_not_change_score():
+    at = _start_game(secret=50, difficulty="Normal")
+
+    for raw in ["10", "20", "30"]:
+        at.text_input[0].set_value(raw)
+        _submit_button(at).click().run()
+        assert at.session_state["status"] == "playing"
+        assert at.session_state["score"] == 0
+
+
+# Starting a New Game before the current game ends must leave the score
+# untouched — New Game resets the round (attempts/secret/history/status) but not
+# the running score, and no game-ending event fired to change it.
+def test_new_game_before_end_leaves_score_unchanged():
+    at = _start_game(secret=50, difficulty="Normal")
+    at.session_state["score"] = 70
+    at.run()
+
+    # A wrong guess mid-game doesn't move the score...
+    at.text_input[0].set_value("10")
+    _submit_button(at).click().run()
+    assert at.session_state["status"] == "playing"
+    assert at.session_state["score"] == 70
+
+    # ...and pressing New Game before the game ends leaves it unchanged too.
+    _new_game_button(at).click().run()
+    assert at.session_state["status"] == "playing"
+    assert at.session_state["attempts"] == 0
+    assert at.session_state["score"] == 70
