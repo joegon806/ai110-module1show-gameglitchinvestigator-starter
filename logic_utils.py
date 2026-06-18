@@ -70,7 +70,7 @@ def check_guess(guess, secret):
     else:
         return "Too Low", "📈 Go HIGHER!"
 
-def update_score(current_score: int, status: str, attempt_limit: int, attempts_taken: int):
+def game_points(status: str, attempt_limit: int, attempts_taken: int):
     #FIXED: AI implemented new scoring logic based on game outcome
     """
     Update score only when the game ends.
@@ -85,9 +85,9 @@ def update_score(current_score: int, status: str, attempt_limit: int, attempts_t
     Any other status ("playing", etc.) leaves the score unchanged.
     """
     if status == "won":
-        return current_score + (attempt_limit + 1 - attempts_taken) * 10
+        return (attempt_limit + 1 - attempts_taken) * 10
 
     if status == "lost":
-        return current_score - 5
+        return -5
 
-    return current_score
+    return 0

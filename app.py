@@ -1,12 +1,13 @@
 import random
 import streamlit as st
 
-from logic_utils import check_guess, parse_guess, get_range_for_difficulty, update_score
+from logic_utils import check_guess, parse_guess, get_range_for_difficulty, game_points
  
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
 st.title("🎮 Game Glitch Investigator")
 st.caption("An AI-generated guessing game. Something is off.")
+st.caption("Win = 10 points per attempt left. Lose = -5 points.")
 
 st.sidebar.header("Settings")
 
@@ -103,32 +104,32 @@ if submit and st.session_state.status == "playing":
         # subtracts 5. Individual guesses no longer move the score.
         if outcome == "Win":
             st.session_state.status = "won"
-            st.session_state.score = update_score(
-                current_score=st.session_state.score,
+            points = game_points(
                 status=st.session_state.status,
                 attempt_limit=attempt_limit,
                 attempts_taken=st.session_state.attempts,
             )
+            st.session_state.score += points
             st.balloons()
             ended_this_run = True
             st.success(
                 f"You won! The secret was {st.session_state.secret}. "
-                f"Final score: {st.session_state.score}"
+                f"Score + {points} = {st.session_state.score}"
             )
         else:
             if st.session_state.attempts >= attempt_limit:
                 st.session_state.status = "lost"
-                st.session_state.score = update_score(
-                    current_score=st.session_state.score,
+                points = game_points(
                     status=st.session_state.status,
                     attempt_limit=attempt_limit,
                     attempts_taken=st.session_state.attempts,
                 )
+                st.session_state.score += points
                 ended_this_run = True
                 st.error(
                     f"Out of attempts! "
                     f"The secret was {st.session_state.secret}. "
-                    f"Score: {st.session_state.score}"
+                    f"Score {points} = {st.session_state.score}"
                 )
 
 # FIXED: AI moved state info after the guess bar so that the game state is updated before the info is displayed

@@ -16,7 +16,7 @@ from streamlit.testing.v1 import AppTest
 # Import from logic_utils (where check_guess lives) rather than through app.
 # Importing app would execute the whole Streamlit script at module-load time,
 # which leaks st.form's context in bare mode and breaks later AppTest runs.
-from logic_utils import check_guess, parse_guess, get_range_for_difficulty, update_score
+from logic_utils import check_guess, parse_guess, get_range_for_difficulty, game_points
 
 APP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app.py")
 
@@ -498,7 +498,7 @@ def test_repeat_guess_does_not_consume_attempt():
     assert "already guessed 30" in error_text
 
 
-# update_score(current_score, status, attempt_limit, attempts_taken) returns
+# game_points(current_score, status, attempt_limit, attempts_taken) returns
 # the new score. The score only settles when the game ends: a win adds
 # (attempt_limit + 1 - attempts_taken) * 10, so winning in fewer attempts is
 # worth more; a loss subtracts 5. These pin the win formula.
@@ -513,34 +513,34 @@ def test_repeat_guess_does_not_consume_attempt():
     ],
 )
 def test_win_awards_points_by_attempts_remaining(attempt_limit, attempts_taken, expected_points):
-    assert update_score(0, "won", attempt_limit, attempts_taken) == expected_points
+    assert game_points(0, "won", attempt_limit, attempts_taken) == expected_points
 
 
 def test_win_points_add_to_current_score():
     # Points are added to the existing score, not replacing it.
-    assert update_score(50, "won", 8, 1) == 130  # 50 + 80
+    assert game_points(50, "won", 8, 1) == 130  # 50 + 80
 
 
 # A loss always subtracts 5, regardless of attempt counts.
 @pytest.mark.parametrize("attempt_limit, attempts_taken", [(8, 8), (5, 5), (6, 6)])
 def test_loss_subtracts_five(attempt_limit, attempts_taken):
-    assert update_score(10, "lost", attempt_limit, attempts_taken) == 5
+    assert game_points(10, "lost", attempt_limit, attempts_taken) == 5
 
 
 def test_loss_score_can_go_negative():
-    assert update_score(0, "lost", 8, 8) == -5
+    assert game_points(0, "lost", 8, 8) == -5
 
 
 # While the game is still in progress (or for any non-ending status), the score
 # is left unchanged — individual guesses no longer move it.
 @pytest.mark.parametrize("status", ["playing", "", "Too High", "Too Low", None])
 def test_non_ending_status_leaves_score_unchanged(status):
-    assert update_score(42, status, 8, 3) == 42
+    assert game_points(42, status, 8, 3) == 42
 
 
 # --------------------------------------------------------------------------
 # End-to-end scoring through the app (AppTest). These drive the real Streamlit
-# script so they cover update_score AND the app's call-site wiring: the score
+# script so they cover game_points AND the app's call-site wiring: the score
 # only moves on the game-ending click, and not before.
 # --------------------------------------------------------------------------
 
