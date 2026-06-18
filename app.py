@@ -143,10 +143,12 @@ if st.session_state.status != "playing" and not ended_this_run:
 
 # Display code now runs AFTER the submit handler, so it reads the freshly
 # updated session_state on the same click — no extra st.rerun() needed.
-st.info(
-    f"Guess a number between 1 and 100. "
-    f"Attempts left: {attempt_limit - st.session_state.attempts}"
-)
+# FIXED: AI added a check to ensure the info is only displayed when the game is still playing
+if st.session_state.status == "playing":
+    st.info(
+        f"Guess a number between 1 and 100. "
+        f"Attempts left: {attempt_limit - st.session_state.attempts}"
+    )
 
 with st.expander("Developer Debug Info"):
     st.write("Secret:", st.session_state.secret)
