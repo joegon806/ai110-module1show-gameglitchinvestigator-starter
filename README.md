@@ -38,6 +38,7 @@ It wrote the code, ran away, and now the game is unplayable.
    - **Sometimes the secret number gets converted to a string.**
    - **A hint is still shown after the last guess.**
    - **Confusing scoring algorithm.**
+   - **If the user selects a new difficulty, the game continues with the same secret.**
    - **Edge Cases:**
       - **Guesses that except a TypeError (Strings, empty guesses) still get compared and processed in the Debug info (i.e. decreases attempts).**
       - **Guesses that are out of range, decimal values, or repeats are still accepted.**

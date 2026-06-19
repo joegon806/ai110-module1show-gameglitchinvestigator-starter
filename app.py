@@ -11,6 +11,7 @@ st.caption("Win = 10 points per attempt left. Lose = -5 points.")
 
 st.sidebar.header("Settings")
 
+#FIXME: start a new game if the user selects a different difficulty
 difficulty = st.sidebar.selectbox(
     "Difficulty",
     ["Easy", "Normal", "Hard"],
