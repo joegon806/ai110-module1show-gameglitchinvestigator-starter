@@ -27,16 +27,20 @@ attempt_limit = attempt_limit_map[difficulty]
 
 low, high = get_range_for_difficulty(difficulty)
 
+def start_new_game(low, high):
+    """Reset all per-game state and pick a fresh secret in [low, high]."""
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.attempts = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
+
 # FIXED: AI starts a fresh game whenever the selected difficulty changes, so the
 # secret number falls within the new range and counters/history reset.
 if "difficulty" not in st.session_state:
     st.session_state.difficulty = difficulty
 elif st.session_state.difficulty != difficulty:
     st.session_state.difficulty = difficulty
-    st.session_state.secret = random.randint(low, high)
-    st.session_state.attempts = 0
-    st.session_state.status = "playing"
-    st.session_state.history = []
+    start_new_game(low, high)
     st.info(f"Difficulty changed to {difficulty}. New game started!")
 
 st.sidebar.caption(f"Range: {low} to {high}")
@@ -80,10 +84,7 @@ with col2:
 
 #FIXED: AI made the New Game button start a new game when clicked and reset game state.
 if new_game:
-    st.session_state.attempts = 0
-    st.session_state.secret = random.randint(low, high)
-    st.session_state.status = "playing"
-    st.session_state.history = []
+    start_new_game(low, high)
     st.success("New game started.")
     st.rerun()
 
