@@ -734,3 +734,79 @@ def test_banner_still_shows_after_wrong_guess_mid_game():
 
     assert at.session_state["status"] == "playing"
     assert "Attempts left: 7" in _banner_text(at)
+
+
+# --------------------------------------------------------------------------
+# Changing the difficulty selectbox starts a brand-new game: a fresh secret is
+# drawn from the NEW difficulty's range and attempts/history/status all reset.
+# The default difficulty is "Normal" (1..100); switching to "Easy" (1..20) or
+# "Hard" (1..50) must produce a secret inside the new, smaller range.
+# --------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "new_difficulty, low, high",
+    [("Easy", 1, 20), ("Hard", 1, 50)],
+)
+def test_changing_difficulty_starts_new_game_in_new_range(new_difficulty, low, high):
+    # Build up some game progress under the default "Normal" difficulty.
+    at = AppTest.from_file(APP_PATH)
+    at.run()
+    at.session_state["attempts"] = 3
+    at.session_state["history"] = [10, 20, 30]
+    at.session_state["status"] = "playing"
+    at.run()
+
+    # Switch difficulty -> a new game starts.
+    at.selectbox[0].set_value(new_difficulty).run()
+
+    assert at.session_state["difficulty"] == new_difficulty
+    assert at.session_state["status"] == "playing"
+    assert at.session_state["attempts"] == 0
+    assert at.session_state["history"] == []
+    # The new secret must fall within the NEW difficulty's range.
+    assert low <= at.session_state["secret"] <= high
+
+
+def test_changing_difficulty_shows_new_game_notice():
+    at = AppTest.from_file(APP_PATH)
+    at.run()
+
+    at.selectbox[0].set_value("Easy").run()
+
+    banner_text = " ".join(i.value for i in at.info)
+    assert "Difficulty changed to Easy" in banner_text
+
+
+def test_changing_difficulty_resets_finished_game():
+    # A finished (won) game must be reset to "playing" when difficulty changes.
+    at = AppTest.from_file(APP_PATH)
+    at.run()
+    at.session_state["status"] = "won"
+    at.session_state["attempts"] = 4
+    at.session_state["history"] = [42]
+    at.run()
+
+    at.selectbox[0].set_value("Hard").run()
+
+    assert at.session_state["difficulty"] == "Hard"
+    assert at.session_state["status"] == "playing"
+    assert at.session_state["attempts"] == 0
+    assert at.session_state["history"] == []
+    assert 1 <= at.session_state["secret"] <= 50
+
+
+def test_same_difficulty_rerun_does_not_reset_game():
+    # Re-running WITHOUT changing the difficulty must leave the game intact —
+    # only an actual change starts a new game.
+    at = _start_game_with_secret(50)
+
+    at.text_input[0].set_value("10")
+    _submit_button(at).click().run()
+    assert at.session_state["attempts"] == 1
+    assert at.session_state["history"] == [10]
+
+    # Re-select the SAME ("Normal") difficulty -> no reset.
+    at.selectbox[0].set_value("Normal").run()
+    assert at.session_state["attempts"] == 1
+    assert at.session_state["history"] == [10]
+    assert at.session_state["secret"] == 50

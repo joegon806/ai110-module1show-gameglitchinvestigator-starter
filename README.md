@@ -38,7 +38,7 @@ It wrote the code, ran away, and now the game is unplayable.
    - **Sometimes the secret number gets converted to a string.**
    - **A hint is still shown after the last guess.**
    - **Confusing scoring algorithm.**
-   - **If the user selects a new difficulty, the game continues with the same secret.**
+   - **If the user selects a new difficulty, the game continues with the same secret. (Problematic if the previous game has an answer out of range of the new difficulty's limit)**
    - **Edge Cases:**
       - **Guesses that except a TypeError (Strings, empty guesses) still get compared and processed in the Debug info (i.e. decreases attempts).**
       - **Guesses that are out of range, decimal values, or repeats are still accepted.**
@@ -51,6 +51,7 @@ It wrote the code, ran away, and now the game is unplayable.
    - **removed the string conversion of the answer**
    - **prevented the hint from being shown after the last attempt**
    - **redesigned the scoring algorithm**
+   - **made the game restart if the user changes the difficulty.**
    - **guesses are acceptable only if they're integers, in range, and not repeated**
    - **made the attempts amount decreased only on valid guesses and not on invalid guesses**
    - **made the "Guess a number" bar display only when the game is playing**
@@ -69,5 +70,5 @@ Describe your fixed game in numbered steps so a reader can follow along without 
 
 ```
 tests\test_game_logic.py ..................................................................................................... [100%]
-========================= 101 passed in 11.30s =========================
+========================= 106 passed in 11.30s =========================
 ```
