@@ -60,11 +60,12 @@ It wrote the code, ran away, and now the game is unplayable.
 
 Describe your fixed game in numbered steps so a reader can follow along without watching a video:
 
-1. Select a difficulty from the Difficulty dropdown menu on the left side, if wanted.
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+1. Select a difficulty from the Difficulty dropdown menu on the left sidebar, if wanted.
+2. Guess what the secret number is: Type your guess into the bar in the middle of the screen. (It must be an integer within Range- check the Range on the left sidebar.)
+3. Click Submit Guess or press Enter.
+4. If you don't get the secret right, you'll get a hint telling you to go higher or lower. Make future guesses based on this hint.
+5. Keep guessing until you guess the secret number successfully or use all your attempts.
+6. To start a new game with a new number, click New Game or select a different difficulty.
 
 ## 🧪 Test Results
 
