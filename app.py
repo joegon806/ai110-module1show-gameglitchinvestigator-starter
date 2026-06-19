@@ -11,7 +11,7 @@ st.caption("Win = 10 points per attempt left. Lose = -5 points.")
 
 st.sidebar.header("Settings")
 
-#FIXME: start a new game if the user selects a different difficulty
+#FIXED: AI starts a new game if the user selects a different difficulty
 difficulty = st.sidebar.selectbox(
     "Difficulty",
     ["Easy", "Normal", "Hard"],
@@ -26,6 +26,18 @@ attempt_limit_map = {
 attempt_limit = attempt_limit_map[difficulty]
 
 low, high = get_range_for_difficulty(difficulty)
+
+# FIXED: AI starts a fresh game whenever the selected difficulty changes, so the
+# secret number falls within the new range and counters/history reset.
+if "difficulty" not in st.session_state:
+    st.session_state.difficulty = difficulty
+elif st.session_state.difficulty != difficulty:
+    st.session_state.difficulty = difficulty
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.attempts = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
+    st.info(f"Difficulty changed to {difficulty}. New game started!")
 
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
